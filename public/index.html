@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MahiruDex - Baca Manga Online Terbaik</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <!-- Hamburger Menu Toggle Button -->
+                <button id="btnMenuToggle" class="btn btn-circle btn-menu-toggle" title="Menu"><i class="fa-solid fa-bars"></i></button>
+                <a href="/" class="logo">
+                    <span class="logo-accent">Mahiru</span>Dex
+                </a>
+            </div>
+            
+            <div class="search-bar-container">
+                <input type="text" id="searchInput" placeholder="Cari manga di MahiruDex...">
+                <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+
+            <div class="nav-right" style="width: 38px;"></div> <!-- Placeholder to keep layout balanced -->
+        </div>
+    </header>
+
+    <!-- Slide-out Navigation Drawer -->
+    <div id="sideDrawer" class="side-drawer hidden">
+        <div class="drawer-header">
+            <h3>Menu Utama</h3>
+            <button id="btnDrawerClose" class="btn-close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <ul class="drawer-menu">
+            <li><a href="/" id="menuHome" class="active"><i class="fa-solid fa-house"></i> Home</a></li>
+            <li><a href="#" id="menuAdvancedSearch"><i class="fa-solid fa-sliders"></i> Advanced Search</a></li>
+            <li><a href="#" id="menuRandom"><i class="fa-solid fa-shuffle"></i> Random Manga</a></li>
+            <li><a href="#" id="menuSettings"><i class="fa-solid fa-gear"></i> Pengaturan Reader</a></li>
+            <li><a href="#" id="menuAbout"><i class="fa-solid fa-circle-info"></i> Tentang MahiruDex</a></li>
+            <li><a href="/docs" target="_blank"><i class="fa-solid fa-code"></i> API Documentation</a></li>
+            
+        </ul>
+    </div>
+    <!-- Drawer Overlay -->
+    <div id="drawerOverlay" class="drawer-overlay hidden"></div>
+
+    <!-- Advanced Search / Filter Panel (Toggle from Menu) -->
+    <div id="filterPanel" class="filter-panel hidden">
+        <div class="filter-panel-header">
+            <h3><i class="fa-solid fa-filter"></i> Advanced Search</h3>
+            <button id="btnCloseFilters" class="btn-close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="filter-grid">
+            <div class="filter-col">
+                <label for="sortSelect">Urutkan Berdasarkan (Sort By):</label>
+                <select id="sortSelect">
+                    <option value="followedCount">Jumlah Pengikut (Populer)</option>
+                    <option value="rating">Rating Tertinggi</option>
+                    <option value="latestUploadedChapter">Chapter Terbaru</option>
+                    <option value="createdAt">Baru Ditambahkan</option>
+                    <option value="relevance">Relevansi (Untuk Pencarian)</option>
+                    <option value="title">Judul (A-Z)</option>
+                </select>
+            </div>
+            <div class="filter-col">
+                <label for="statusSelect">Status:</label>
+                <select id="statusSelect">
+                    <option value="">Semua Status</option>
+                    <option value="ongoing">Ongoing</option>
+                    <option value="completed">Completed</option>
+                    <option value="hiatus">Hiatus</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="filter-col">
+                <label for="demographicSelect">Demografis:</label>
+                <select id="demographicSelect">
+                    <option value="">Semua Demografis</option>
+                    <option value="shounen">Shounen</option>
+                    <option value="shoujo">Shoujo</option>
+                    <option value="seinen">Seinen</option>
+                    <option value="josei">Josei</option>
+                </select>
+            </div>
+            <div class="filter-col">
+                <label for="langSelect">Bahasa Asal:</label>
+                <select id="langSelect">
+                    <option value="">Semua Bahasa</option>
+                    <option value="ja">Jepang (Manga)</option>
+                    <option value="ko">Korea (Manhwa)</option>
+                    <option value="zh">Cina (Manhua)</option>
+                </select>
+            </div>
+            <div class="filter-col">
+                <label>Content Rating:</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="rateSafe" checked value="safe"> Safe</label>
+                    <label><input type="checkbox" id="rateSuggestive" checked value="suggestive"> Suggestive</label>
+                </div>
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button id="btnResetFilters" class="btn">Reset</button>
+            <button id="btnApplyFilters" class="btn btn-primary">Terapkan Filter</button>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal hidden">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-circle-info" style="color: var(--accent-color);"></i> Tentang MahiruDex</h3>
+                <button id="btnAboutClose" class="btn-close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="font-size: 14px; line-height: 1.6;">
+                <p><strong>MahiruDex</strong> adalah aplikasi client pembaca manga web custom yang dibuat secara khusus agar bersih, cepat, dan bebas dari iklan mengganggu.</p>
+                <p style="margin-top: 10px;">Layanan kami sepenuhnya menggunakan <strong>MangaDex</strong> resmi untuk memuat ribuan manga, chapter, dan detail komik secara <em>real-time</em> langsung dari server MangaDex.</p>
+                
+                <div style="background-color: #2b2b32; padding: 12px; border-radius: 6px; margin-top: 12px; border-left: 3px solid var(--accent-color);">
+                    <h4 style="font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--accent-color);"><i class="fa-solid fa-shield-halved"></i> Bebas Iklan & Proxy Gambar</h4>
+                    Semua gambar manga di-proxy langsung melalui server kami untuk menghindari masalah CORS, hotlinking, atau loading lambat dari jaringan CDN MangaDex.
+                </div>
+                
+                <div style="background-color: #24242c; padding: 12px; border-radius: 6px; margin-top: 12px; border-left: 3px solid #3b82f6;">
+                    <h4 style="font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #3b82f6;"><i class="fa-solid fa-code"></i> Dokumentasi API Internal</h4>
+                    MahiruDex menyediakan endpoint API mandiri bebas CORS yang siap pakai untuk pencarian manga, filter genre, detail, bab, relasi sekuel, dan proxy gambar/iframe.
+                    <div style="margin-top: 8px;">
+                        <a href="/docs" target="_blank" class="btn btn-sm btn-primary" style="display: inline-flex; align-items: center; gap: 6px;"><i class="fa-solid fa-book"></i> Buka API Docs</a>
+                    </div>
+                </div>
+                
+                <p style="margin-top: 16px; font-size: 11px; text-align: center; color: var(--text-secondary);">
+                    MahiruDex versi 1.4.0 • Dibuat dengan ❤️ untuk komunitas pecinta manga.
+                </p>
+            </div>
+        </div>
+        <div class="modal-overlay" onclick="document.getElementById('aboutModal').classList.add('hidden')"></div>
+    </div>
+
+    <!-- Global Reader Settings Modal -->
+    <div id="globalSettingsModal" class="modal hidden">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-gear" style="color: var(--accent-color);"></i> Pengaturan Default</h3>
+                <button id="btnSettingsClose" class="btn-close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="globalReadingMode">Default Mode Membaca:</label>
+                    <select id="globalReadingMode" style="background-color: #121214; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 6px; outline: none;">
+                        <option value="longstrip">Webtoon (Long Strip)</option>
+                        <option value="single">Single Page</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-top: 12px;">
+                    <label for="globalImageWidth">Default Lebar Halaman:</label>
+                    <select id="globalImageWidth" style="background-color: #121214; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 6px; outline: none;">
+                        <option value="width-600">600px (Kecil)</option>
+                        <option value="width-800">800px (Sedang)</option>
+                        <option value="width-1000">1000px (Lebar)</option>
+                        <option value="width-full">Full Width (Penuh)</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-top: 12px;">
+                    <label for="globalImageQuality">Default Kualitas Gambar:</label>
+                    <select id="globalImageQuality" style="background-color: #121214; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 6px; outline: none;">
+                        <option value="data">Original (Kualitas Tinggi)</option>
+                        <option value="dataSaver">Data Saver (Lebih Hemat Kuota)</option>
+                    </select>
+                </div>
+                <button id="btnSaveGlobalSettings" class="btn btn-primary btn-full-width" style="margin-top: 16px;">Simpan Preferensi</button>
+            </div>
+        </div>
+        <div class="modal-overlay" onclick="document.getElementById('globalSettingsModal').classList.add('hidden')"></div>
+    </div>
+
+    <main class="main-content">
+        <!-- Dashboard / Homepage View -->
+        <div id="homeDashboardView">
+            <!-- POPULAR NEW TITLES (Carousel) -->
+            <section class="carousel-section">
+                <div class="section-header">
+                    <h2 class="clickable-header" onclick="viewAllSection('popular-new')"><i class="fa-solid fa-star"></i> Popular New Titles <i class="fa-solid fa-chevron-right header-chevron"></i></h2>
+                    <div class="carousel-nav">
+                        <button class="btn btn-sm btn-circle" onclick="scrollCarousel('popularNewCarousel', -400)"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="btn btn-sm btn-circle" onclick="scrollCarousel('popularNewCarousel', 400)"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="carousel-viewport" id="popularNewCarousel">
+                    <!-- Cards populated here -->
+                </div>
+            </section>
+
+            <!-- RECOMMENDED (Grid) -->
+            <section class="grid-section" style="margin-bottom: 32px;">
+                <div class="section-header">
+                    <h2 class="clickable-header" onclick="viewAllSection('recommended')"><i class="fa-solid fa-thumbs-up"></i> Recommended <i class="fa-solid fa-chevron-right header-chevron"></i></h2>
+                </div>
+                <div class="manga-grid" id="recommendedGrid">
+                    <!-- Cards populated here -->
+                </div>
+            </section>
+
+            <!-- SEASONAL SECTION (Spring 2026) -->
+            <section class="grid-section" style="margin-bottom: 32px;">
+                <div class="section-header">
+                    <h2 class="clickable-header" onclick="viewAllSection('seasonal')"><i class="fa-solid fa-snowflake"></i> Seasonal: Spring 2026 <i class="fa-solid fa-chevron-right header-chevron"></i></h2>
+                </div>
+                <div class="manga-grid" id="seasonalGrid">
+                    <!-- Seasonal items loaded here -->
+                </div>
+            </section>
+
+            <!-- SELF-PUBLISHED (Carousel) -->
+            <section class="carousel-section">
+                <div class="section-header">
+                    <h2 class="clickable-header" onclick="viewAllSection('self-published')"><i class="fa-solid fa-user-pen"></i> Self-Published <i class="fa-solid fa-chevron-right header-chevron"></i></h2>
+                    <div class="carousel-nav">
+                        <button class="btn btn-sm btn-circle" onclick="scrollCarousel('selfPublishedCarousel', -400)"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="btn btn-sm btn-circle" onclick="scrollCarousel('recentlyAddedCarousel', 400)"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="carousel-viewport" id="selfPublishedCarousel">
+                    <!-- Cards populated here -->
+                </div>
+            </section>
+
+            <!-- RECENTLY ADDED (Carousel) -->
+            <section class="carousel-section">
+                <div class="section-header">
+                    <h2 class="clickable-header" onclick="viewAllSection('recently-added')"><i class="fa-solid fa-plus"></i> Recently Added <i class="fa-solid fa-chevron-right header-chevron"></i></h2>
+                    <div class="carousel-nav">
+                        <button class="btn btn-sm btn-circle" onclick="scrollCarousel('recentlyAddedCarousel', -400)"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="btn btn-sm btn-circle" onclick="scrollCarousel('recentlyAddedCarousel', 400)"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="carousel-viewport" id="recentlyAddedCarousel">
+                    <!-- Cards populated here -->
+                </div>
+            </section>
+
+            <!-- GENRE & TAGS SECTION (Paling Bawah) -->
+            <section class="tags-section" style="margin-bottom: 32px; background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px;">
+                <h3 style="font-size: 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                    <i class="fa-solid fa-tags"></i> Genre & Tags Populer
+                </h3>
+                <div class="tags-cloud" id="tagsCloud">
+                    <!-- Tags loaded here -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Browse / Search View -->
+        <div id="browseView" class="hidden">
+            <div class="browse-header">
+                <button id="btnBackToHome" class="btn btn-sm"><i class="fa-solid fa-arrow-left"></i> Kembali ke Home</button>
+                <div class="browse-title-bar">
+                    <h2 id="browseTitle">Hasil Pencarian</h2>
+                    <span class="status-indicator" id="browseCount">0 manga</span>
+                </div>
+                <div class="browse-sorting" id="browseSortingContainer">
+                    <label for="browseSort">Sort By:</label>
+                    <select id="browseSort">
+                        <option value="followedCount">Popularity</option>
+                        <option value="rating">Top Rated</option>
+                        <option value="latestUploadedChapter">Latest Update</option>
+                        <option value="createdAt">Recently Added</option>
+                        <option value="title">Title A-Z</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Grid -->
+            <div class="manga-grid" id="browseMangaGrid">
+                <!-- Loaded items -->
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="loading-container hidden" id="browseLoading">
+                <div class="spinner"></div>
+                <p>Memuat...</p>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-container" id="paginationContainer">
+                <button id="btnLoadMore" class="btn btn-large btn-primary"><i class="fa-solid fa-arrow-down-long"></i> Muat Lebih Banyak (Load More)</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2025 MahiruDex. Powered by MangaDex. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // DOM Elements
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const btnMenuToggle = document.getElementById('btnMenuToggle');
+        const sideDrawer = document.getElementById('sideDrawer');
+        const drawerOverlay = document.getElementById('drawerOverlay');
+        const btnDrawerClose = document.getElementById('btnDrawerClose');
+        const btnAdvancedSearch = document.getElementById('menuAdvancedSearch');
+        const btnCloseFilters = document.getElementById('btnCloseFilters');
+        const filterPanel = document.getElementById('filterPanel');
+        const btnRandomManga = document.getElementById('menuRandom');
+        const menuHome = document.getElementById('menuHome');
+        const menuAbout = document.getElementById('menuAbout');
+        const menuSettings = document.getElementById('menuSettings');
+
+        // Modal elements
+        const aboutModal = document.getElementById('aboutModal');
+        const btnAboutClose = document.getElementById('btnAboutClose');
+        const globalSettingsModal = document.getElementById('globalSettingsModal');
+        const btnSettingsClose = document.getElementById('btnSettingsClose');
+        const btnSaveGlobalSettings = document.getElementById('btnSaveGlobalSettings');
+        const globalReadingMode = document.getElementById('globalReadingMode');
+        const globalImageWidth = document.getElementById('globalImageWidth');
+        const globalImageQuality = document.getElementById('globalImageQuality');
+
+        // Views
+        const homeDashboardView = document.getElementById('homeDashboardView');
+        const browseView = document.getElementById('browseView');
+        const btnBackToHome = document.getElementById('btnBackToHome');
+        const browseTitle = document.getElementById('browseTitle');
+        const browseCount = document.getElementById('browseCount');
+        const browseMangaGrid = document.getElementById('browseMangaGrid');
+        const browseLoading = document.getElementById('browseLoading');
+        const btnLoadMore = document.getElementById('btnLoadMore');
+        const browseSort = document.getElementById('browseSort');
+        const browseSortingContainer = document.getElementById('browseSortingContainer');
+
+        // Carousels & lists
+        const popularNewCarousel = document.getElementById('popularNewCarousel');
+        const recommendedGrid = document.getElementById('recommendedGrid');
+        const seasonalGrid = document.getElementById('seasonalGrid');
+        const selfPublishedCarousel = document.getElementById('selfPublishedCarousel');
+        const recentlyAddedCarousel = document.getElementById('recentlyAddedCarousel');
+        const tagsCloud = document.getElementById('tagsCloud');
+
+        // Filter Form inputs
+        const sortSelect = document.getElementById('sortSelect');
+        const statusSelect = document.getElementById('statusSelect');
+        const demographicSelect = document.getElementById('demographicSelect');
+        const langSelect = document.getElementById('langSelect');
+        const rateSafe = document.getElementById('rateSafe');
+        const rateSuggestive = document.getElementById('rateSuggestive');
+        const btnApplyFilters = document.getElementById('btnApplyFilters');
+        const btnResetFilters = document.getElementById('btnResetFilters');
+
+        // State
+        let currentSearchQuery = '';
+        let currentTagFilter = '';
+        let currentSectionView = ''; 
+        let currentOffset = 0;
+        const limitPerPage = 32;
+        let isFetchingNextPage = false;
+        let activeFilters = {
+            sort: 'followedCount',
+            status: '',
+            demographic: '',
+            lang: '',
+            contentRating: ['safe', 'suggestive']
+        };
+
+        // Scroll helper for horizontal carousels
+        window.scrollCarousel = function(id, distance) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.scrollBy({ left: distance, behavior: 'smooth' });
+            }
+        };
+
+        // Custom Popup Alert implementation
+        function showCustomAlert(message, title = "Info") {
+            const overlay = document.createElement('div');
+            overlay.className = 'custom-dialog-overlay';
+            overlay.innerHTML = `
+                <div class="custom-dialog-box">
+                    <div class="custom-dialog-title">${title}</div>
+                    <div class="custom-dialog-message">${message}</div>
+                    <div class="custom-dialog-buttons">
+                        <button class="btn btn-primary" onclick="this.closest('.custom-dialog-overlay').remove()">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+            loadGlobalPreferences();
+
+            // Toggle side drawer
+            btnMenuToggle.addEventListener('click', toggleDrawer);
+            btnDrawerClose.addEventListener('click', toggleDrawer);
+            drawerOverlay.addEventListener('click', toggleDrawer);
+
+            // Toggle filter panel
+            btnAdvancedSearch.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleDrawer();
+                filterPanel.classList.toggle('hidden');
+            });
+            btnCloseFilters.addEventListener('click', () => filterPanel.classList.add('hidden'));
+
+            // About modal toggle
+            menuAbout.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleDrawer();
+                aboutModal.classList.remove('hidden');
+            });
+            btnAboutClose.addEventListener('click', () => aboutModal.classList.add('hidden'));
+
+            // Settings modal toggle
+            menuSettings.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleDrawer();
+                globalSettingsModal.classList.remove('hidden');
+            });
+            btnSettingsClose.addEventListener('click', () => globalSettingsModal.classList.add('hidden'));
+            btnSaveGlobalSettings.addEventListener('click', saveGlobalPreferences);
+
+            // Reset filters
+            btnResetFilters.addEventListener('click', () => {
+                sortSelect.value = 'followedCount';
+                statusSelect.value = '';
+                demographicSelect.value = '';
+                langSelect.value = '';
+                rateSafe.checked = true;
+                rateSuggestive.checked = true;
+            });
+
+            // Apply filters
+            btnApplyFilters.addEventListener('click', () => {
+                activeFilters.sort = sortSelect.value;
+                activeFilters.status = statusSelect.value;
+                activeFilters.demographic = demographicSelect.value;
+                activeFilters.lang = langSelect.value;
+                activeFilters.contentRating = [];
+                if (rateSafe.checked) activeFilters.contentRating.push('safe');
+                if (rateSuggestive.checked) activeFilters.contentRating.push('suggestive');
+
+                filterPanel.classList.add('hidden');
+                browseSort.value = activeFilters.sort;
+                triggerBrowseSearch();
+            });
+
+            // Random Manga button
+            btnRandomManga.addEventListener('click', async (e) => {
+                e.preventDefault();
+                toggleDrawer();
+                try {
+                    const response = await fetch('/api/manga/random/get');
+                    const res = await response.json();
+                    if (res.success) {
+                        window.location.href = `/manga?id=${res.data.id}`;
+                    } else {
+                        showCustomAlert('Gagal mengambil manga acak dari server.', 'Manga Acak');
+                    }
+                } catch(e) {
+                    showCustomAlert('Terjadi kesalahan: ' + e.message, 'Kesalahan');
+                }
+            });
+
+            // Header search input
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    currentSearchQuery = searchInput.value.trim();
+                    currentTagFilter = '';
+                    currentSectionView = '';
+                    triggerBrowseSearch();
+                }
+            });
+            searchBtn.addEventListener('click', () => {
+                currentSearchQuery = searchInput.value.trim();
+                currentTagFilter = '';
+                currentSectionView = '';
+                triggerBrowseSearch();
+            });
+
+            // Back to Home
+            btnBackToHome.addEventListener('click', () => {
+                homeDashboardView.classList.remove('hidden');
+                browseView.classList.add('hidden');
+                currentSearchQuery = '';
+                currentTagFilter = '';
+                currentSectionView = '';
+                searchInput.value = '';
+            });
+
+            btnLoadMore.addEventListener('click', loadNextPage);
+
+            browseSort.addEventListener('change', () => {
+                activeFilters.sort = browseSort.value;
+                sortSelect.value = browseSort.value;
+                triggerBrowseSearch();
+            });
+        });
+
+        function toggleDrawer() {
+            sideDrawer.classList.toggle('hidden');
+            drawerOverlay.classList.toggle('hidden');
+        }
+
+        // Global Reader Preferences
+        function loadGlobalPreferences() {
+            globalReadingMode.value = localStorage.getItem('reader_mode') || 'longstrip';
+            globalImageWidth.value = localStorage.getItem('reader_width') || 'width-800';
+            globalImageQuality.value = localStorage.getItem('reader_quality') || 'data';
+        }
+
+        function saveGlobalPreferences() {
+            localStorage.setItem('reader_mode', globalReadingMode.value);
+            localStorage.setItem('reader_width', globalImageWidth.value);
+            localStorage.setItem('reader_quality', globalImageQuality.value);
+            
+            globalSettingsModal.classList.add('hidden');
+            showCustomAlert('Pengaturan preferensi default berhasil disimpan!', 'Pengaturan');
+        }
+
+        function loadDashboard() {
+            loadTags();
+            fetchPopularNew();
+            fetchRecommended();
+            fetchSeasonal();
+            fetchSelfPublished();
+            fetchRecentlyAdded();
+        }
+
+        async function loadTags() {
+            try {
+                const response = await fetch('/api/tags');
+                const result = await response.json();
+                if (result.success) {
+                    tagsCloud.innerHTML = result.data.map(tag => 
+                        `<span class="tag-badge clickable" onclick="searchByTag('${tag.id}', '${tag.name}')">${tag.name}</span>`
+                    ).join('');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function fetchPopularNew() {
+            try {
+                const response = await fetch('/api/manga?limit=15&order=rating');
+                const result = await response.json();
+                if (result.success) {
+                    popularNewCarousel.innerHTML = result.data.map(manga => renderCarouselCard(manga)).join('');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function fetchRecommended() {
+            try {
+                const response = await fetch('/api/manga?limit=12&order=followedCount');
+                const result = await response.json();
+                if (result.success) {
+                    recommendedGrid.innerHTML = result.data.map(manga => renderGridCard(manga)).join('');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function fetchSelfPublished() {
+            try {
+                const response = await fetch('/api/manga?limit=15&includedTags[]=e197df38-d0e7-43b5-9b09-2842d0c326dd');
+                const result = await response.json();
+                if (result.success) {
+                    selfPublishedCarousel.innerHTML = result.data.map(manga => renderCarouselCard(manga)).join('');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function fetchRecentlyAdded() {
+            try {
+                const response = await fetch('/api/manga?limit=15&order=createdAt');
+                const result = await response.json();
+                if (result.success) {
+                    recentlyAddedCarousel.innerHTML = result.data.map(manga => renderCarouselCard(manga)).join('');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function fetchSeasonal() {
+            try {
+                const response = await fetch('/api/manga?limit=6&order=followedCount&includedTags[]=391b0423-db2f-4837-b415-177b4d1b84f9');
+                const result = await response.json();
+                if (result.success) {
+                    seasonalGrid.innerHTML = result.data.map(manga => renderGridCard(manga)).join('');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderCarouselCard(manga) {
+            return `
+                <div class="carousel-card" onclick="window.location.href='/manga?id=${manga.id}'">
+                    <div class="carousel-cover-wrapper">
+                        <img class="carousel-cover" src="${manga.coverUrl}" alt="${manga.title}" loading="lazy">
+                    </div>
+                    <div class="carousel-info">
+                        <h4 class="carousel-title" title="${manga.title}">${manga.title}</h4>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render card layout
+        function renderGridCard(manga) {
+            const tagsHtml = manga.tags.slice(0, 2).map(tag => `<span class="card-tag">${tag}</span>`).join('');
+            return `
+                <div class="manga-card" onclick="window.location.href='/manga?id=${manga.id}'">
+                    <div class="card-cover-wrapper">
+                        <img class="card-cover" src="${manga.coverUrl}" alt="${manga.title}" loading="lazy">
+                        <div class="card-status status-${manga.status}">${manga.status}</div>
+                    </div>
+                    <div class="card-info">
+                        <h3 class="card-title" title="${manga.title}">${manga.title}</h3>
+                        <p class="card-author"><i class="fa-solid fa-pen-nib"></i> ${manga.author}</p>
+                        <div class="card-tags-list">
+                            ${tagsHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.viewAllSection = function(section) {
+            currentSectionView = section;
+            currentSearchQuery = '';
+            currentTagFilter = '';
+            
+            if (section === 'popular-new') {
+                browseTitle.innerHTML = `<i class="fa-solid fa-star"></i> Popular New Titles`;
+                browseSort.value = 'rating';
+            } else if (section === 'recommended') {
+                browseTitle.innerHTML = `<i class="fa-solid fa-thumbs-up"></i> Recommended`;
+                browseSort.value = 'followedCount';
+            } else if (section === 'self-published') {
+                browseTitle.innerHTML = `<i class="fa-solid fa-user-pen"></i> Self-Published`;
+                browseSort.value = 'followedCount';
+            } else if (section === 'seasonal') {
+                browseTitle.innerHTML = `<i class="fa-solid fa-snowflake"></i> Seasonal: Spring 2026`;
+                browseSort.value = 'followedCount';
+            } else if (section === 'recently-added') {
+                browseTitle.innerHTML = `<i class="fa-solid fa-plus"></i> Recently Added`;
+                browseSort.value = 'createdAt';
+            }
+
+            activeFilters.sort = browseSort.value;
+            triggerBrowseSearch();
+        };
+
+        function searchByTag(tagId, tagName) {
+            currentTagFilter = tagId;
+            currentSearchQuery = '';
+            currentSectionView = '';
+            browseTitle.innerHTML = `<i class="fa-solid fa-tags"></i> Genre: ${tagName}`;
+            triggerBrowseSearch();
+        }
+
+        function triggerBrowseSearch() {
+            homeDashboardView.classList.add('hidden');
+            browseView.classList.remove('hidden');
+            
+            browseMangaGrid.innerHTML = '';
+            currentOffset = 0;
+            
+            browseSortingContainer.classList.remove('hidden');
+            browseMangaGrid.classList.remove('hidden');
+            
+            fetchBrowsePage();
+        }
+
+        async function fetchBrowsePage() {
+            if (isFetchingNextPage) return;
+            isFetchingNextPage = true;
+            browseLoading.classList.remove('hidden');
+            btnLoadMore.classList.add('hidden');
+
+            try {
+                let url = `/api/manga?limit=${limitPerPage}&offset=${currentOffset}&order=${activeFilters.sort}`;
+                if (currentSearchQuery) {
+                    url += `&title=${encodeURIComponent(currentSearchQuery)}`;
+                }
+                if (currentTagFilter) {
+                    url += `&includedTags=${currentTagFilter}`;
+                }
+                if (currentSectionView === 'self-published') {
+                    url += `&includedTags=e197df38-d0e7-43b5-9b09-2842d0c326dd`;
+                }
+                if (currentSectionView === 'seasonal') {
+                    url += `&includedTags=391b0423-db2f-4837-b415-177b4d1b84f9`;
+                }
+                if (activeFilters.status) {
+                    url += `&status=${activeFilters.status}`;
+                }
+                if (activeFilters.demographic) {
+                    url += `&publicationDemographic=${activeFilters.demographic}`;
+                }
+                if (activeFilters.lang) {
+                    url += `&originalLanguage=${activeFilters.lang}`;
+                }
+                activeFilters.contentRating.forEach(r => {
+                    url += `&contentRating=${r}`;
+                });
+
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.success) {
+                    renderBrowseList(result.data);
+                    browseCount.textContent = `Menampilkan ${browseMangaGrid.children.length} dari ${result.total} manga`;
+                    
+                    if (browseMangaGrid.children.length < result.total) {
+                        btnLoadMore.classList.remove('hidden');
+                    } else {
+                        btnLoadMore.classList.add('hidden');
+                    }
+                } else {
+                    showCustomAlert('Gagal memuat data: ' + result.error, 'Kesalahan');
+                }
+            } catch (err) {
+                console.error(err);
+                showCustomAlert('Gagal memuat: ' + err.message, 'Kesalahan');
+            } finally {
+                browseLoading.classList.add('hidden');
+                isFetchingNextPage = false;
+            }
+        }
+
+        function renderBrowseList(list) {
+            if (list.length === 0 && browseMangaGrid.children.length === 0) {
+                browseMangaGrid.innerHTML = `
+                    <div class="no-results">
+                        <i class="fa-regular fa-face-frown fa-3x"></i>
+                        <p>Tidak ada manga yang ditemukan. Coba reset filter atau kata kunci lain.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.forEach(manga => {
+                const card = document.createElement('div');
+                card.className = 'manga-card';
+                card.onclick = () => {
+                    window.location.href = `/manga?id=${manga.id}`;
+                };
+
+                const tagsHtml = manga.tags.slice(0, 3).map(tag => `<span class="card-tag">${tag}</span>`).join('');
+                
+                card.innerHTML = `
+                    <div class="card-cover-wrapper">
+                        <img class="card-cover" src="${manga.coverUrl}" alt="${manga.title}" loading="lazy">
+                        <div class="card-status status-${manga.status}">${manga.status}</div>
+                    </div>
+                    <div class="card-info">
+                        <h3 class="card-title" title="${manga.title}">${manga.title}</h3>
+                        <p class="card-author"><i class="fa-solid fa-pen-nib"></i> ${manga.author}</p>
+                        <div class="card-tags-list">
+                            ${tagsHtml}
+                        </div>
+                    </div>
+                `;
+                browseMangaGrid.appendChild(card);
+            });
+        }
+
+        function loadNextPage() {
+            currentOffset += limitPerPage;
+            fetchBrowsePage();
+        }
+    </script>
+</body>
+</html>

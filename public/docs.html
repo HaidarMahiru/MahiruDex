@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MahiruDex API - Dokumentasi Lengkap</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .docs-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px 16px;
+        }
+        .docs-header {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+        .docs-section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .endpoint-badge {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            text-transform: uppercase;
+            margin-right: 8px;
+        }
+        .badge-get { background-color: #059669; }
+        .badge-post { background-color: #2563eb; }
+        .badge-delete { background-color: #dc2626; }
+        .endpoint-path {
+            font-family: monospace;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+        .param-table th, .param-table td {
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .param-table th {
+            background-color: #1a1a1f;
+            color: var(--text-secondary);
+        }
+        .code-block {
+            background-color: #121214;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 14px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #4ade80;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo"><span class="logo-accent">Mahiru</span>Dex <span style="font-size: 12px; color: var(--text-secondary);">API Docs</span></a>
+            <div class="nav-links">
+                <a href="/"><i class="fa-solid fa-house"></i> Ke Web</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="docs-container">
+        <div class="docs-header">
+            <h1><i class="fa-solid fa-book" style="color: var(--accent-color);"></i> Dokumentasi API MahiruDex</h1>
+            <p class="muted-text">Semua endpoint API internal yang disediakan oleh backend MahiruDex untuk mengakses resource MangaDex secara langsung tanpa masalah CORS.</p>
+        </div>
+
+        <!-- Endpoint: Search Manga (DIPERJELAS) -->
+        <div class="docs-section">
+            <div class="endpoint-header">
+                <span class="endpoint-badge badge-get">GET</span>
+                <span class="endpoint-path">/api/manga</span>
+            </div>
+            <h3 style="color: var(--accent-color); font-size: 16px; margin-bottom: 8px;"><i class="fa-solid fa-magnifying-glass"></i> Endpoint Pencarian & Eksplorasi Manga</h3>
+            <p>Digunakan untuk melakukan pencarian manga berdasarkan judul, tag/genre, status penerbitan, demografis pembaca, dan melakukan pengurutan hasil secara dinamis.</p>
+            
+            <table class="param-table">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Tipe</th>
+                        <th>Keterangan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>title</td>
+                        <td>String</td>
+                        <td>Kata kunci pencarian judul manga (Contoh: `title=solo+leveling`)</td>
+                    </tr>
+                    <tr>
+                        <td>limit</td>
+                        <td>Integer</td>
+                        <td>Batas jumlah hasil yang dikembalikan per halaman (Default: `20`)</td>
+                    </tr>
+                    <tr>
+                        <td>offset</td>
+                        <td>Integer</td>
+                        <td>Offset halaman data untuk memuat halaman berikutnya (Default: `0`)</td>
+                    </tr>
+                    <tr>
+                        <td>order</td>
+                        <td>String</td>
+                        <td>Urutan: `followedCount` (terpopuler), `rating` (tertinggi), `createdAt` (baru ditambahkan), `title` (A-Z), `relevance` (pencarian relevan)</td>
+                    </tr>
+                    <tr>
+                        <td>status</td>
+                        <td>String</td>
+                        <td>`ongoing` (berjalan), `completed` (selesai), `hiatus`, `cancelled`</td>
+                    </tr>
+                    <tr>
+                        <td>includedTags</td>
+                        <td>Array / String</td>
+                        <td>UUID tag/genre yang wajib dimiliki manga (dapat diulang untuk beberapa tag)</td>
+                    </tr>
+                    <tr>
+                        <td>publicationDemographic</td>
+                        <td>String</td>
+                        <td>Demografis pembaca: `shounen`, `shoujo`, `seinen`, `josei`</td>
+                    </tr>
+                    <tr>
+                        <td>originalLanguage</td>
+                        <td>String</td>
+                        <td>Bahasa asal: `ja` (Manga Jepang), `ko` (Manhwa Korea), `zh` (Manhua Cina)</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4 style="font-size: 13px; font-weight: bold; margin-top: 14px; color: var(--text-primary);">Contoh Kasus 1: Pencarian Berdasarkan Judul</h4>
+            <div class="code-block">
+curl -X GET "http://localhost:2010/api/manga?title=solo+leveling"
+            </div>
+
+            <h4 style="font-size: 13px; font-weight: bold; margin-top: 14px; color: var(--text-primary);">Contoh Kasus 2: Filter Berdasarkan Genre (Action) & Demografis (Seinen)</h4>
+            <div class="code-block">
+curl -X GET "http://localhost:2010/api/manga?includedTags=391b0423-db2f-4837-b415-177b4d1b84f9&publicationDemographic=seinen&limit=5"
+            </div>
+        </div>
+
+        <!-- Endpoint: Detail Manga -->
+        <div class="docs-section">
+            <div class="endpoint-header">
+                <span class="endpoint-badge badge-get">GET</span>
+                <span class="endpoint-path">/api/manga/:id</span>
+            </div>
+            <p>Mendapatkan detail metadata lengkap (judul, deskripsi, cover art, penulis, artis, tags) untuk satu manga tertentu berdasarkan UUID manga.</p>
+            <div class="code-block">
+curl -X GET "http://localhost:2010/api/manga/32d76d19-8a05-4db0-9fc2-e0b0648fe9d0"
+            </div>
+        </div>
+
+        <!-- Endpoint: Relasi Manga -->
+        <div class="docs-section">
+            <div class="endpoint-header">
+                <span class="endpoint-badge badge-get">GET</span>
+                <span class="endpoint-path">/api/manga/:id/relation</span>
+            </div>
+            <p>Mengambil manga yang memiliki relasi cerita (sekuel, prekuel, spin-off, adaptasi, dll.) lengkap dengan link gambar cover art-nya.</p>
+            <div class="code-block">
+curl -X GET "http://localhost:2010/api/manga/32d76d19-8a05-4db0-9fc2-e0b0648fe9d0/relation"
+            </div>
+        </div>
+
+        <!-- Endpoint: Chapter Feed -->
+        <div class="docs-section">
+            <div class="endpoint-header">
+                <span class="endpoint-badge badge-get">GET</span>
+                <span class="endpoint-path">/api/manga/:id/feed</span>
+            </div>
+            <p>Mendapatkan daftar semua chapter untuk suatu manga yang di-sort naik secara numerik.</p>
+            <table class="param-table">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Tipe</th>
+                        <th>Keterangan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>lang</td>
+                        <td>String</td>
+                        <td>Filter bahasa terjemahan (koma terpisah), Contoh: `id,en` (Default: `en,id`)</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="code-block">
+curl -X GET "http://localhost:2010/api/manga/32d76d19-8a05-4db0-9fc2-e0b0648fe9d0/feed?lang=id"
+            </div>
+        </div>
+
+        <!-- Endpoint: Chapter Pages -->
+        <div class="docs-section">
+            <div class="endpoint-header">
+                <span class="endpoint-badge badge-get">GET</span>
+                <span class="endpoint-path">/api/chapter/:id</span>
+            </div>
+            <p>Mendapatkan data URL gambar halaman pembaca untuk satu chapter spesifik.</p>
+            <table class="param-table">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Tipe</th>
+                        <th>Keterangan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>quality</td>
+                        <td>String</td>
+                        <td>`data` (Kualitas tinggi original) atau `dataSaver` (Kualitas terkompres)</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="code-block">
+curl -X GET "http://localhost:2010/api/chapter/3390737b-5901-4160-bc6c-7f5dd07bbc4a?quality=data"
+            </div>
+        </div>
+
+        <!-- Endpoint: Tags -->
+        <div class="docs-section">
+            <div class="endpoint-header">
+                <span class="endpoint-badge badge-get">GET</span>
+                <span class="endpoint-path">/api/tags</span>
+            </div>
+            <p>Mendapatkan semua daftar genre & tag dari MangaDex untuk kategori genre & theme.</p>
+            <div class="code-block">
+curl -X GET "http://localhost:2010/api/tags"
+            </div>
+        </div>
+
+        <!-- Endpoint: Random Manga -->
+        <div class="docs-section">
+            <div class="endpoint-header">
+                <span class="endpoint-badge badge-get">GET</span>
+                <span class="endpoint-path">/api/manga/random/get</span>
+            </div>
+            <p>Mendapatkan ID manga acak dari database server MangaDex.</p>
+            <div class="code-block">
+curl -X GET "http://localhost:2010/api/manga/random/get"
+            </div>
+        </div>
+
+        <!-- Endpoint: Image Proxy -->
+        <div class="docs-section">
+            <div class="endpoint-header">
+                <span class="endpoint-badge badge-get">GET</span>
+                <span class="endpoint-path">/api/proxy?url=&lt;url&gt;</span>
+            </div>
+            <p>Proxy gambar global untuk menghindari pemblokiran CORS / Hotlinking images dari uploads.mangadex.org / *.mangadex.network.</p>
+        </div>
+
+        <!-- Endpoint: Iframe Proxy -->
+        <div class="docs-section">
+            <div class="endpoint-header">
+                <span class="endpoint-badge badge-get">GET</span>
+                <span class="endpoint-path">/api/iframe-proxy?url=&lt;url&gt;</span>
+            </div>
+            <p>Proxy halaman web luar (seperti MangaPlus, dll.) agar bisa dirender langsung di dalam tag iframe client kita tanpa terkena block X-Frame-Options.</p>
+        </div>
+    </main>
+</body>
+</html>

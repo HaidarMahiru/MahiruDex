@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Manga - MahiruDex</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Top Navbar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-accent">Mahiru</span>Dex
+            </a>
+            <div class="nav-links">
+                <a href="/"><i class="fa-solid fa-house"></i> Home</a>
+                <a href="javascript:history.back()"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- Loading Spinner -->
+        <div class="loading-container" id="loading">
+            <div class="spinner"></div>
+            <p>Memuat detail manga...</p>
+        </div>
+
+        <!-- Error Alert -->
+        <div class="error-container hidden" id="errorContainer">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <p id="errorMessage">Gagal memuat detail manga.</p>
+            <button class="btn" onclick="location.reload()">Coba Lagi</button>
+        </div>
+
+        <!-- Manga Detail Container -->
+        <div class="detail-container hidden" id="detailContainer">
+            <!-- Breadcrumbs -->
+            <nav class="breadcrumbs">
+                <a href="/">Home</a> &gt; <span id="breadcrumbTitle">Detail Manga</span>
+            </nav>
+
+            <!-- Manga Banner / Header -->
+            <div class="manga-header-card">
+                <div class="manga-cover-column">
+                    <img id="mangaCover" src="" alt="Cover Manga">
+                </div>
+                <div class="manga-info-column">
+                    <h1 id="mangaTitle">Judul Manga</h1>
+                    <p class="manga-author-artist">
+                        <span><i class="fa-solid fa-pen-nib"></i> Author: <strong id="mangaAuthor">Loading...</strong></span>
+                        <span class="separator">|</span>
+                        <span><i class="fa-solid fa-palette"></i> Artist: <strong id="mangaArtist">Loading...</strong></span>
+                    </p>
+                    <div class="manga-metadata-badges">
+                        <span class="status-badge" id="mangaStatus">Status</span>
+                        <span class="year-badge" id="mangaYear">Tahun</span>
+                        <span class="lang-badge" id="mangaLang">Bahasa</span>
+                        <span class="demographic-badge" id="mangaDemographic" style="background-color: #059669;">Demographic</span>
+                    </div>
+                    <div class="manga-genres-container" id="mangaGenres">
+                        <!-- Badges will be generated -->
+                    </div>
+                    
+                    <div class="manga-synopsis-box">
+                        <h3>Sinopsis</h3>
+                        <p id="mangaDescription">Deskripsi manga...</p>
+                    </div>
+
+                    <div class="manga-actions-row" style="margin-top: 16px;">
+                        <button class="btn btn-primary btn-large" id="btnReadFirst">
+                            <i class="fa-solid fa-book-open"></i> Mulai Baca (Ch. 1)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Manga Section -->
+            <div class="chapter-section-card" id="relatedSection" style="margin-bottom: 24px; display: none;">
+                <h2><i class="fa-solid fa-link"></i> Seri Terkait / Relasi</h2>
+                <div class="carousel-viewport" id="relatedMangaList" style="margin-top: 12px; padding-bottom: 8px;">
+                    <!-- Related manga items -->
+                </div>
+            </div>
+
+            <!-- Chapter Section -->
+            <div class="chapter-section-card">
+                <div class="chapter-header-bar">
+                    <h2><i class="fa-solid fa-list-ul"></i> Daftar Chapter</h2>
+                    
+                    <!-- Language selector and filters -->
+                    <div class="chapter-filters">
+                        <div class="filter-group">
+                            <label for="langFilter"><i class="fa-solid fa-language"></i> Filter Bahasa:</label>
+                            <select id="langFilter">
+                                <option value="id,en">Indonesian & English</option>
+                                <option value="id">Indonesian Only</option>
+                                <option value="en">English Only</option>
+                                <option value="all">Semua Bahasa</option>
+                            </select>
+                        </div>
+                        <input type="text" id="chapterSearch" placeholder="Cari chapter (cth: 5)...">
+                    </div>
+                </div>
+
+                <div class="loading-container hidden" id="chaptersLoading">
+                    <div class="spinner"></div>
+                    <p>Memuat daftar chapter...</p>
+                </div>
+
+                <!-- Chapters List Table -->
+                <div class="chapter-list-wrapper">
+                    <table class="chapter-table" id="chapterTable">
+                        <thead>
+                            <tr>
+                                <th>Chapter</th>
+                                <th>Nama Chapter</th>
+                                <th>Kelompok / Scanlator</th>
+                                <th>Bahasa</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="chapterListBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                    <div class="no-chapters-msg hidden" id="noChaptersMsg">
+                        <i class="fa-regular fa-folder-open"></i>
+                        <p>Tidak ada chapter yang ditemukan dengan filter ini.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2025 MahiruDex. Powered by MangaDex API. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const mangaId = urlParams.get('id');
+
+        const loading = document.getElementById('loading');
+        const chaptersLoading = document.getElementById('chaptersLoading');
+        const errorContainer = document.getElementById('errorContainer');
+        const errorMessage = document.getElementById('errorMessage');
+        const detailContainer = document.getElementById('detailContainer');
+        
+        // Elements
+        const breadcrumbTitle = document.getElementById('breadcrumbTitle');
+        const mangaCover = document.getElementById('mangaCover');
+        const mangaTitle = document.getElementById('mangaTitle');
+        const mangaAuthor = document.getElementById('mangaAuthor');
+        const mangaArtist = document.getElementById('mangaArtist');
+        const mangaStatus = document.getElementById('mangaStatus');
+        const mangaYear = document.getElementById('mangaYear');
+        const mangaLang = document.getElementById('mangaLang');
+        const mangaDemographic = document.getElementById('mangaDemographic');
+        const mangaGenres = document.getElementById('mangaGenres');
+        const mangaDescription = document.getElementById('mangaDescription');
+        
+        const btnReadFirst = document.getElementById('btnReadFirst');
+        const relatedSection = document.getElementById('relatedSection');
+        const relatedMangaList = document.getElementById('relatedMangaList');
+
+        const chapterListBody = document.getElementById('chapterListBody');
+        const chapterSearch = document.getElementById('chapterSearch');
+        const langFilter = document.getElementById('langFilter');
+        const noChaptersMsg = document.getElementById('noChaptersMsg');
+
+        let allChapters = [];
+
+        if (!mangaId) {
+            window.location.href = '/';
+        } else {
+            document.addEventListener('DOMContentLoaded', () => {
+                loadMangaDetails();
+                loadChapters();
+                loadRelatedManga();
+
+                langFilter.addEventListener('change', () => {
+                    loadChapters();
+                });
+
+                chapterSearch.addEventListener('input', filterChapters);
+            });
+        }
+
+        async function loadMangaDetails() {
+            try {
+                const response = await fetch(`/api/manga/${mangaId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const manga = result.data;
+                    document.title = `${manga.title} - MahiruDex`;
+                    breadcrumbTitle.textContent = manga.title;
+                    mangaCover.src = manga.coverUrl;
+                    mangaCover.alt = manga.title;
+                    mangaTitle.textContent = manga.title;
+                    mangaAuthor.textContent = manga.author;
+                    mangaArtist.textContent = manga.artist;
+                    mangaStatus.textContent = manga.status.toUpperCase();
+                    mangaStatus.className = `status-badge status-${manga.status}`;
+                    mangaYear.textContent = manga.year || 'N/A';
+                    mangaLang.textContent = manga.originalLanguage?.toUpperCase() || 'N/A';
+                    
+                    if (manga.publicationDemographic) {
+                        mangaDemographic.textContent = manga.publicationDemographic.toUpperCase();
+                        mangaDemographic.style.display = 'inline-block';
+                    } else {
+                        mangaDemographic.style.display = 'none';
+                    }
+
+                    mangaDescription.textContent = manga.description;
+
+                    mangaGenres.innerHTML = manga.tags.map(t => 
+                        `<span class="tag-badge">${t}</span>`
+                    ).join('');
+
+                    loading.classList.add('hidden');
+                    detailContainer.classList.remove('hidden');
+                } else {
+                    showError(result.error);
+                }
+            } catch (err) {
+                showError(err.message);
+            }
+        }
+
+        async function loadChapters() {
+            chaptersLoading.classList.remove('hidden');
+            chapterListBody.innerHTML = '';
+            noChaptersMsg.classList.add('hidden');
+
+            const selectedLang = langFilter.value;
+            let langQuery = 'id,en';
+            if (selectedLang === 'id') langQuery = 'id';
+            if (selectedLang === 'en') langQuery = 'en';
+            if (selectedLang === 'all') langQuery = 'id,en,ja,ja-ro,zh,zh-hk,ko';
+
+            try {
+                const response = await fetch(`/api/manga/${mangaId}/feed?lang=${langQuery}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    allChapters = result.data;
+                    renderChapters(allChapters);
+                    
+                    if (allChapters.length > 0) {
+                        btnReadFirst.style.display = 'inline-block';
+                        btnReadFirst.onclick = () => {
+                            window.location.href = `/reader?id=${allChapters[0].id}&mangaId=${mangaId}`;
+                        };
+                    } else {
+                        btnReadFirst.style.display = 'none';
+                    }
+                } else {
+                    console.error('Error fetching chapters:', result.error);
+                }
+            } catch (err) {
+                console.error('Error fetching chapters:', err);
+            } finally {
+                chaptersLoading.classList.add('hidden');
+            }
+        }
+
+        async function loadRelatedManga() {
+            try {
+                const response = await fetch(`/api/manga/${mangaId}/relation`);
+                const result = await response.json();
+                if (result.success && result.data.length > 0) {
+                    relatedSection.style.display = 'block';
+                    relatedMangaList.innerHTML = result.data.map(m => `
+                        <div class="carousel-card" onclick="window.location.href='/manga?id=${m.id}'" style="flex: 0 0 130px;">
+                            <div class="carousel-cover-wrapper">
+                                <img class="carousel-cover" src="${m.coverUrl}" alt="${m.title}" loading="lazy">
+                            </div>
+                            <div class="carousel-info" style="padding: 6px;">
+                                <h4 class="carousel-title" style="font-size: 11px; height: 28px;" title="${m.title}">${m.title}</h4>
+                                <span style="font-size: 9px; color: var(--accent-color); font-weight: bold; text-transform: uppercase; margin-top: 2px; display: block;">${m.relationType}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error('Error loading related manga:', e);
+            }
+        }
+
+        function renderChapters(chapters) {
+            chapterListBody.innerHTML = '';
+            if (chapters.length === 0) {
+                noChaptersMsg.classList.remove('hidden');
+                return;
+            }
+
+            noChaptersMsg.classList.add('hidden');
+
+            chapters.forEach(ch => {
+                const tr = document.createElement('tr');
+                
+                const langFlag = ch.translatedLanguage === 'id' ? '🇮🇩' : ch.translatedLanguage === 'en' ? '🇬🇧' : ch.translatedLanguage;
+                const chapterLabel = `Chapter ${ch.chapter}`;
+                
+                tr.innerHTML = `
+                    <td class="bold-text">${chapterLabel}</td>
+                    <td>${ch.title || '<span class="muted-text">Tidak ada judul</span>'}</td>
+                    <td><span class="scan-group">${ch.group}</span></td>
+                    <td><span class="flag">${langFlag} ${ch.translatedLanguage.toUpperCase()}</span></td>
+                    <td>
+                        <a href="/reader?id=${ch.id}&mangaId=${mangaId}" class="btn btn-sm btn-read">
+                            <i class="fa-solid fa-book-open"></i> Baca
+                        </a>
+                    </td>
+                `;
+                chapterListBody.appendChild(tr);
+            });
+        }
+
+        function filterChapters() {
+            const query = chapterSearch.value.trim().toLowerCase();
+            if (!query) {
+                renderChapters(allChapters);
+                return;
+            }
+
+            const filtered = allChapters.filter(ch => 
+                ch.chapter.toLowerCase().includes(query) || 
+                ch.title.toLowerCase().includes(query) ||
+                ch.group.toLowerCase().includes(query)
+            );
+            renderChapters(filtered);
+        }
+
+        function showError(msg) {
+            errorMessage.textContent = `Terjadi kesalahan: ${msg}`;
+            errorContainer.classList.remove('hidden');
+            loading.classList.add('hidden');
+            detailContainer.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

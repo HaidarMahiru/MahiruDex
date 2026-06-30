@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Membaca Manga - MahiruDex</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="reader-body">
+    <!-- Reader Navbar / Header Controls -->
+    <header class="reader-header">
+        <div class="reader-nav-left">
+            <a href="/" class="reader-logo"><span class="logo-accent">Mahiru</span>Dex</a>
+            <a id="btnBackToManga" href="#" class="reader-nav-btn" title="Kembali ke Detail Manga">
+                <i class="fa-solid fa-chevron-left"></i> <span class="hide-mobile">Detail Manga</span>
+            </a>
+        </div>
+
+        <div class="reader-nav-center">
+            <!-- Prev Chapter -->
+            <button id="btnPrevChapter" class="reader-nav-btn" disabled>
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            
+            <!-- Chapter Selector Dropdown -->
+            <select id="chapterSelector" class="reader-dropdown">
+                <option value="">Memuat chapter...</option>
+            </select>
+
+            <!-- Next Chapter -->
+            <button id="btnNextChapter" class="reader-nav-btn" disabled>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <div class="reader-nav-right">
+            <!-- Settings button triggers floating settings menu -->
+            <button id="btnToggleSettings" class="reader-nav-btn" title="Pengaturan Pembaca">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Floating Settings Menu -->
+    <div id="readerSettingsMenu" class="reader-settings-menu hidden">
+        <h3><i class="fa-solid fa-sliders"></i> Pengaturan</h3>
+        <hr>
+        <div class="setting-item">
+            <label for="readingMode"><i class="fa-solid fa-book-open"></i> Mode Membaca:</label>
+            <select id="readingMode">
+                <option value="longstrip">Webtoon (Long Strip)</option>
+                <option value="single">Single Page</option>
+            </select>
+        </div>
+        <div class="setting-item">
+            <label for="imageWidth"><i class="fa-solid fa-arrows-left-right"></i> Lebar Halaman:</label>
+            <select id="imageWidth">
+                <option value="width-600">600px (Kecil)</option>
+                <option value="width-800" selected>800px (Sedang)</option>
+                <option value="width-1000">1000px (Lebar)</option>
+                <option value="width-full">Full Width (Penuh)</option>
+            </select>
+        </div>
+        <div class="setting-item">
+            <label for="imageQuality"><i class="fa-solid fa-gauge-high"></i> Kualitas Gambar:</label>
+            <select id="imageQuality">
+                <option value="data">Original (HQ)</option>
+                <option value="dataSaver">Data Saver (Kompres)</option>
+            </select>
+        </div>
+        <button id="btnSaveSettings" class="btn btn-primary btn-full-width">Terapkan</button>
+    </div>
+
+    <!-- Main Reader Workspace -->
+    <main class="reader-container">
+        <!-- Loading Spinner -->
+        <div class="loading-container" id="loading">
+            <div class="spinner"></div>
+            <p>Memuat halaman chapter...</p>
+        </div>
+
+        <!-- Page Viewer Canvas -->
+        <div class="reader-canvas width-800" id="readerCanvas">
+            <!-- Embedded Iframe Viewer for External/MangaPlus chapters -->
+            <div id="externalViewer" class="viewer-mode hidden" style="width: 100%; height: 90vh;">
+                <iframe id="externalIframe" src="" style="width: 100%; height: 100%; border: none; background: #ffffff; border-radius: 8px;"></iframe>
+            </div>
+
+            <!-- Webtoon Mode: Scrolling list of images -->
+            <div id="longStripViewer" class="viewer-mode">
+                <!-- Images populated here -->
+            </div>
+
+            <!-- Single Page Mode: One image with pagination -->
+            <div id="singlePageViewer" class="viewer-mode hidden">
+                <div class="single-page-controls">
+                    <button class="page-nav-btn btn-prev" id="singlePagePrev">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <div class="single-image-container">
+                        <img id="singlePageImage" src="" alt="Manga Page">
+                    </div>
+                    <button class="page-nav-btn btn-next" id="singlePageNext">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div class="single-page-indicator">
+                    Halaman <span id="currentPageNum">1</span> / <span id="totalPageNum">1</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick bottom navigation for Long Strip -->
+        <div class="bottom-nav-strip hidden" id="bottomNavStrip">
+            <button class="btn" id="btnBottomPrev" disabled><i class="fa-solid fa-arrow-left"></i> Chapter Sebelumnya</button>
+            <button class="btn" id="btnBottomNext" disabled>Chapter Selanjutnya <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+    </main>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let chapterId = urlParams.get('id');
+        const mangaId = urlParams.get('mangaId');
+
+        const loading = document.getElementById('loading');
+        const btnBackToManga = document.getElementById('btnBackToManga');
+
+        // Header controls
+        const btnPrevChapter = document.getElementById('btnPrevChapter');
+        const btnNextChapter = document.getElementById('btnNextChapter');
+        const chapterSelector = document.getElementById('chapterSelector');
+        const btnToggleSettings = document.getElementById('btnToggleSettings');
+        const readerSettingsMenu = document.getElementById('readerSettingsMenu');
+        const btnSaveSettings = document.getElementById('btnSaveSettings');
+        const bottomNavStrip = document.getElementById('bottomNavStrip');
+        const btnBottomPrev = document.getElementById('btnBottomPrev');
+        const btnBottomNext = document.getElementById('btnBottomNext');
+
+        // Settings inputs
+        const readingModeInput = document.getElementById('readingMode');
+        const imageWidthInput = document.getElementById('imageWidth');
+        const imageQualityInput = document.getElementById('imageQuality');
+
+        // Canvas / Viewers
+        const readerCanvas = document.getElementById('readerCanvas');
+        const longStripViewer = document.getElementById('longStripViewer');
+        const singlePageViewer = document.getElementById('singlePageViewer');
+
+        // Single Page Elements
+        const singlePageImage = document.getElementById('singlePageImage');
+        const singlePagePrev = document.getElementById('singlePagePrev');
+        const singlePageNext = document.getElementById('singlePageNext');
+        const currentPageNum = document.getElementById('currentPageNum');
+        const totalPageNum = document.getElementById('totalPageNum');
+
+        // State variables
+        let mangaChapters = [];
+        let currentChapterIndex = -1;
+        let pageUrls = [];
+        let currentSinglePageNum = 0; // 0-indexed
+
+        // Settings defaults
+        let settings = {
+            readingMode: localStorage.getItem('reader_mode') || 'longstrip',
+            imageWidth: localStorage.getItem('reader_width') || 'width-800',
+            imageQuality: localStorage.getItem('reader_quality') || 'data'
+        };
+
+        // CUSTOM POPUP DIALOGS
+        function showCustomAlert(message, title = "Info") {
+            const overlay = document.createElement('div');
+            overlay.className = 'custom-dialog-overlay';
+            overlay.innerHTML = `
+                <div class="custom-dialog-box">
+                    <div class="custom-dialog-title">${title}</div>
+                    <div class="custom-dialog-message">${message}</div>
+                    <div class="custom-dialog-buttons">
+                        <button class="btn btn-primary" onclick="this.closest('.custom-dialog-overlay').remove()">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function showCustomConfirm(message, onConfirm, onCancel = () => {}, title = "Konfirmasi") {
+            const overlay = document.createElement('div');
+            overlay.className = 'custom-dialog-overlay';
+            overlay.innerHTML = `
+                <div class="custom-dialog-box">
+                    <div class="custom-dialog-title">${title}</div>
+                    <div class="custom-dialog-message">${message}</div>
+                    <div class="custom-dialog-buttons">
+                        <button class="btn" id="dialogBtnCancel">Batal</button>
+                        <button class="btn btn-primary" id="dialogBtnOk">Lanjut</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            
+            document.getElementById('dialogBtnOk').onclick = () => {
+                overlay.remove();
+                onConfirm();
+            };
+            document.getElementById('dialogBtnCancel').onclick = () => {
+                overlay.remove();
+                onCancel();
+            };
+        }
+
+        if (!chapterId || !mangaId) {
+            window.location.href = '/';
+        } else {
+            document.addEventListener('DOMContentLoaded', () => {
+                btnBackToManga.href = `/manga?id=${mangaId}`;
+                applySavedSettings();
+                loadChapterPages();
+                loadMangaFeed();
+
+                btnToggleSettings.addEventListener('click', () => {
+                    readerSettingsMenu.classList.toggle('hidden');
+                });
+
+                btnSaveSettings.addEventListener('click', () => {
+                    saveSettings();
+                    readerSettingsMenu.classList.add('hidden');
+                });
+
+                chapterSelector.addEventListener('change', (e) => {
+                    const newChId = e.target.value;
+                    if (newChId && newChId !== chapterId) {
+                        navigateToChapter(newChId);
+                    }
+                });
+
+                const navigatePrev = () => {
+                    if (currentChapterIndex > 0) {
+                        navigateToChapter(mangaChapters[currentChapterIndex - 1].id);
+                    }
+                };
+
+                const navigateNext = () => {
+                    if (currentChapterIndex < mangaChapters.length - 1) {
+                        navigateToChapter(mangaChapters[currentChapterIndex + 1].id);
+                    }
+                };
+
+                btnPrevChapter.addEventListener('click', navigatePrev);
+                btnBottomPrev.addEventListener('click', navigatePrev);
+                btnNextChapter.addEventListener('click', navigateNext);
+                btnBottomNext.addEventListener('click', navigateNext);
+
+                singlePagePrev.addEventListener('click', prevPage);
+                singlePageNext.addEventListener('click', nextPage);
+
+                document.addEventListener('keydown', (e) => {
+                    if (settings.readingMode === 'single') {
+                        if (e.key === 'ArrowLeft') prevPage();
+                        if (e.key === 'ArrowRight') nextPage();
+                    }
+                });
+            });
+        }
+
+        function applySavedSettings() {
+            readingModeInput.value = settings.readingMode;
+            imageWidthInput.value = settings.imageWidth;
+            imageQualityInput.value = settings.imageQuality;
+
+            readerCanvas.className = `reader-canvas ${settings.imageWidth}`;
+        }
+
+        function saveSettings() {
+            settings.readingMode = readingModeInput.value;
+            settings.imageWidth = imageWidthInput.value;
+            settings.imageQuality = imageQualityInput.value;
+
+            localStorage.setItem('reader_mode', settings.readingMode);
+            localStorage.setItem('reader_width', settings.imageWidth);
+            localStorage.setItem('reader_quality', settings.imageQuality);
+
+            applySavedSettings();
+            loadChapterPages();
+        }
+
+        async function loadChapterPages() {
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/chapter/${chapterId}?quality=${settings.imageQuality}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const chapter = result.data;
+                    pageUrls = chapter.pages;
+                    document.title = `Ch. ${chapter.chapter} - ${chapter.title || 'Membaca'} - MahiruDex`;
+
+                    // Safe verification of MD@Home Pages or External links
+                    if (pageUrls.length === 0) {
+                        const fallbackUrl = chapter.externalUrl || `https://mangadex.org/chapter/${chapterId}`;
+                        
+                        try {
+                            const proxyUrl = `/api/iframe-proxy?url=` + encodeURIComponent(fallbackUrl);
+                            const response = await fetch(proxyUrl);
+                            
+                            if (response.ok) {
+                                const htmlText = await response.text();
+                                showLoading(false);
+                                
+                                readerCanvas.classList.remove('hidden');
+                                document.getElementById('externalViewer').classList.remove('hidden');
+                                longStripViewer.classList.add('hidden');
+                                singlePageViewer.classList.add('hidden');
+                                
+                                const iframe = document.getElementById('externalIframe');
+                                iframe.srcdoc = htmlText;
+                            } else {
+                                const errDetail = await response.text();
+                                throw new Error(errDetail || `Status ${response.status}`);
+                            }
+                        } catch (err) {
+                            showLoading(false);
+                            showCustomAlert(`Gagal memuat halaman eksternal resmi (seperti MangaPlus): ${err.message}.`, 'Gagal Memuat');
+                        }
+                    } else {
+                        renderPages();
+                    }
+                } else {
+                    showError(result.error);
+                }
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                if (pageUrls.length > 0) {
+                    showLoading(false);
+                }
+            }
+        }
+
+        async function loadMangaFeed() {
+            try {
+                const response = await fetch(`/api/manga/${mangaId}/feed?lang=id,en`);
+                const result = await response.json();
+
+                if (result.success) {
+                    mangaChapters = result.data;
+                    currentChapterIndex = mangaChapters.findIndex(ch => ch.id === chapterId);
+
+                    updateNavButtons();
+                    populateDropdown();
+                }
+            } catch (err) {
+                console.error('Error loading feed:', err);
+            }
+        }
+
+        function updateNavButtons() {
+            const hasPrev = currentChapterIndex > 0;
+            const hasNext = currentChapterIndex < mangaChapters.length - 1 && currentChapterIndex !== -1;
+
+            btnPrevChapter.disabled = !hasPrev;
+            btnBottomPrev.disabled = !hasPrev;
+
+            btnNextChapter.disabled = !hasNext;
+            btnBottomNext.disabled = !hasNext;
+        }
+
+        function populateDropdown() {
+            chapterSelector.innerHTML = mangaChapters.map((ch, idx) => {
+                const isSelected = ch.id === chapterId ? 'selected' : '';
+                const langFlag = ch.translatedLanguage === 'id' ? '🇮🇩' : ch.translatedLanguage === 'en' ? '🇬🇧' : ch.translatedLanguage;
+                return `<option value="${ch.id}" ${isSelected}>Ch. ${ch.chapter} - ${ch.title || 'No Title'} (${langFlag} ${ch.translatedLanguage.toUpperCase()})</option>`;
+            }).join('');
+        }
+
+        function navigateToChapter(id) {
+            window.location.href = `/reader?id=${id}&mangaId=${mangaId}`;
+        }
+
+        function renderPages() {
+            if (settings.readingMode === 'longstrip') {
+                longStripViewer.classList.remove('hidden');
+                singlePageViewer.classList.add('hidden');
+                bottomNavStrip.classList.remove('hidden');
+
+                longStripViewer.innerHTML = pageUrls.map((url, idx) => `
+                    <div class="manga-page-wrapper">
+                        <img class="manga-page-img" src="${url}" alt="Halaman ${idx + 1}" loading="lazy" onerror="this.onerror=null; this.src='/placeholder-cover.jpg';">
+                        <div class="page-number-float">${idx + 1}</div>
+                    </div>
+                `).join('');
+            } else {
+                longStripViewer.classList.add('hidden');
+                singlePageViewer.classList.remove('hidden');
+                bottomNavStrip.classList.add('hidden');
+
+                currentSinglePageNum = 0;
+                totalPageNum.textContent = pageUrls.length;
+                loadSinglePageImage();
+            }
+        }
+
+        function loadSinglePageImage() {
+            if (pageUrls.length === 0) return;
+            
+            singlePageImage.style.opacity = '0.5';
+            singlePageImage.src = pageUrls[currentSinglePageNum];
+            
+            singlePageImage.onload = () => {
+                singlePageImage.style.opacity = '1';
+            };
+            
+            currentPageNum.textContent = currentSinglePageNum + 1;
+
+            singlePagePrev.disabled = currentSinglePageNum === 0;
+            singlePageNext.disabled = currentSinglePageNum === pageUrls.length - 1;
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function prevPage() {
+            if (currentSinglePageNum > 0) {
+                currentSinglePageNum--;
+                loadSinglePageImage();
+            }
+        }
+
+        function nextPage() {
+            if (currentSinglePageNum < pageUrls.length - 1) {
+                currentSinglePageNum++;
+                loadSinglePageImage();
+            } else {
+                if (currentChapterIndex < mangaChapters.length - 1) {
+                    showCustomConfirm('Chapter selesai. Lanjut ke chapter berikutnya?', () => {
+                        navigateToChapter(mangaChapters[currentChapterIndex + 1].id);
+                    });
+                } else {
+                    showCustomAlert('Anda telah menyelesaikan chapter terakhir!');
+                }
+            }
+        }
+
+        function showLoading(isLoading) {
+            if (isLoading) {
+                loading.classList.remove('hidden');
+                readerCanvas.classList.add('hidden');
+                bottomNavStrip.classList.add('hidden');
+            } else {
+                loading.classList.add('hidden');
+                readerCanvas.classList.remove('hidden');
+            }
+        }
+
+        function showError(msg) {
+            showCustomAlert(`Gagal memproses chapter ini secara langsung: ${msg}`, 'Gagal Memuat');
+            loading.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
