@@ -96,7 +96,7 @@
             <p class="muted-text">Semua endpoint API internal yang disediakan oleh backend MahiruDex untuk mengakses resource MangaDex secara langsung tanpa masalah CORS.</p>
         </div>
 
-        <!-- Endpoint: Search Manga (DIPERJELAS) -->
+        <!-- Endpoint: Search Manga -->
         <div class="docs-section">
             <div class="endpoint-header">
                 <span class="endpoint-badge badge-get">GET</span>
@@ -158,12 +158,12 @@
             </table>
             
             <h4 style="font-size: 13px; font-weight: bold; margin-top: 14px; color: var(--text-primary);">Contoh Kasus 1: Pencarian Berdasarkan Judul</h4>
-            <div class="code-block">
+            <div class="code-block" data-path="/api/manga?title=solo+leveling">
 curl -X GET "http://localhost:2010/api/manga?title=solo+leveling"
             </div>
 
             <h4 style="font-size: 13px; font-weight: bold; margin-top: 14px; color: var(--text-primary);">Contoh Kasus 2: Filter Berdasarkan Genre (Action) & Demografis (Seinen)</h4>
-            <div class="code-block">
+            <div class="code-block" data-path="/api/manga?includedTags=391b0423-db2f-4837-b415-177b4d1b84f9&publicationDemographic=seinen&limit=5">
 curl -X GET "http://localhost:2010/api/manga?includedTags=391b0423-db2f-4837-b415-177b4d1b84f9&publicationDemographic=seinen&limit=5"
             </div>
         </div>
@@ -175,7 +175,7 @@ curl -X GET "http://localhost:2010/api/manga?includedTags=391b0423-db2f-4837-b41
                 <span class="endpoint-path">/api/manga/:id</span>
             </div>
             <p>Mendapatkan detail metadata lengkap (judul, deskripsi, cover art, penulis, artis, tags) untuk satu manga tertentu berdasarkan UUID manga.</p>
-            <div class="code-block">
+            <div class="code-block" data-path="/api/manga/32d76d19-8a05-4db0-9fc2-e0b0648fe9d0">
 curl -X GET "http://localhost:2010/api/manga/32d76d19-8a05-4db0-9fc2-e0b0648fe9d0"
             </div>
         </div>
@@ -187,7 +187,7 @@ curl -X GET "http://localhost:2010/api/manga/32d76d19-8a05-4db0-9fc2-e0b0648fe9d
                 <span class="endpoint-path">/api/manga/:id/relation</span>
             </div>
             <p>Mengambil manga yang memiliki relasi cerita (sekuel, prekuel, spin-off, adaptasi, dll.) lengkap dengan link gambar cover art-nya.</p>
-            <div class="code-block">
+            <div class="code-block" data-path="/api/manga/32d76d19-8a05-4db0-9fc2-e0b0648fe9d0/relation">
 curl -X GET "http://localhost:2010/api/manga/32d76d19-8a05-4db0-9fc2-e0b0648fe9d0/relation"
             </div>
         </div>
@@ -215,7 +215,7 @@ curl -X GET "http://localhost:2010/api/manga/32d76d19-8a05-4db0-9fc2-e0b0648fe9d
                     </tr>
                 </tbody>
             </table>
-            <div class="code-block">
+            <div class="code-block" data-path="/api/manga/32d76d19-8a05-4db0-9fc2-e0b0648fe9d0/feed?lang=id">
 curl -X GET "http://localhost:2010/api/manga/32d76d19-8a05-4db0-9fc2-e0b0648fe9d0/feed?lang=id"
             </div>
         </div>
@@ -243,7 +243,7 @@ curl -X GET "http://localhost:2010/api/manga/32d76d19-8a05-4db0-9fc2-e0b0648fe9d
                     </tr>
                 </tbody>
             </table>
-            <div class="code-block">
+            <div class="code-block" data-path="/api/chapter/3390737b-5901-4160-bc6c-7f5dd07bbc4a?quality=data">
 curl -X GET "http://localhost:2010/api/chapter/3390737b-5901-4160-bc6c-7f5dd07bbc4a?quality=data"
             </div>
         </div>
@@ -255,7 +255,7 @@ curl -X GET "http://localhost:2010/api/chapter/3390737b-5901-4160-bc6c-7f5dd07bb
                 <span class="endpoint-path">/api/tags</span>
             </div>
             <p>Mendapatkan semua daftar genre & tag dari MangaDex untuk kategori genre & theme.</p>
-            <div class="code-block">
+            <div class="code-block" data-path="/api/tags">
 curl -X GET "http://localhost:2010/api/tags"
             </div>
         </div>
@@ -267,7 +267,7 @@ curl -X GET "http://localhost:2010/api/tags"
                 <span class="endpoint-path">/api/manga/random/get</span>
             </div>
             <p>Mendapatkan ID manga acak dari database server MangaDex.</p>
-            <div class="code-block">
+            <div class="code-block" data-path="/api/manga/random/get">
 curl -X GET "http://localhost:2010/api/manga/random/get"
             </div>
         </div>
@@ -290,5 +290,23 @@ curl -X GET "http://localhost:2010/api/manga/random/get"
             <p>Proxy halaman web luar (seperti MangaPlus, dll.) agar bisa dirender langsung di dalam tag iframe client kita tanpa terkena block X-Frame-Options.</p>
         </div>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get current deployed URL origin dynamically
+            const currentOrigin = window.location.origin;
+            
+            // Auto update all code blocks to match current deployed origin!
+            const codeBlocks = document.querySelectorAll('.code-block');
+            codeBlocks.forEach(block => {
+                const path = block.getAttribute('data-path');
+                if (path) {
+                    block.textContent = `curl -X GET "${currentOrigin}${path}"`;
+                } else {
+                    block.textContent = block.textContent.replace(/http:\/\/localhost:2010/g, currentOrigin);
+                }
+            });
+        });
+    </script>
 </body>
 </html>
