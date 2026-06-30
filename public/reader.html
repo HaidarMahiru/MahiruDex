@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- SEO Tags -->
+    <meta name="description" content="Membaca manga online gratis di MahiruDex. Cepat, nyaman, dan bebas iklan.">
+    <meta name="keywords" content="MangaDex, api manga, manga, manhwa, manhua, mahirudex baca manga">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Membaca Manga - MahiruDex</title>
@@ -292,7 +296,11 @@
                 if (result.success) {
                     const chapter = result.data;
                     pageUrls = chapter.pages;
-                    document.title = `Ch. ${chapter.chapter} - ${chapter.title || 'Membaca'} - MahiruDex`;
+                    document.title = `Membaca ${chapter.title || 'Manga'} Ch. ${chapter.chapter} - MahiruDex`;
+                    
+                    // Dynamic SEO Update for Reader
+                    document.querySelector('meta[name="description"]').setAttribute('content', `Membaca chapter ${chapter.chapter} dari manga ${chapter.title || ''} online secara gratis, tanpa iklan di MahiruDex.`);
+                    document.querySelector('meta[name="keywords"]').setAttribute('content', `${chapter.title || 'manga'}, chapter ${chapter.chapter}, baca ${chapter.title || ''} ch ${chapter.chapter}, manga, manhwa, manhua, MangaDex, mahirudex`);
 
                     // Safe verification of MD@Home Pages or External links
                     if (pageUrls.length === 0) {

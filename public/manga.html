@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- SEO Tags -->
+    <meta name="description" content="Baca manga online gratis di MahiruDex. Cepat, nyaman, dan bebas iklan.">
+    <meta name="keywords" content="MangaDex, api manga, manga, manhwa, manhua, mahirudex baca manga">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="book">
+    <meta property="og:title" content="Detail Manga - MahiruDex">
+    <meta property="og:description" content="Baca info detail manga online gratis di MahiruDex.">
+    <meta property="og:image" content="/placeholder-cover.jpg">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detail Manga - MahiruDex</title>
@@ -220,6 +230,13 @@
                     mangaGenres.innerHTML = manga.tags.map(t => 
                         `<span class="tag-badge">${t}</span>`
                     ).join('');
+
+                    // Dynamic SEO Update based on Manga Details
+                    document.querySelector('meta[name="description"]').setAttribute('content', `Baca manga ${manga.title} online di MahiruDex. ${manga.description.substring(0, 150)}...`);
+                    document.querySelector('meta[name="keywords"]').setAttribute('content', `${manga.title}, manga, manhwa, manhua, MangaDex, api manga, baca ${manga.title}, ${manga.tags.join(', ')}, ${manga.author}`);
+                    document.querySelector('meta[property="og:title"]').setAttribute('content', `${manga.title} - MahiruDex`);
+                    document.querySelector('meta[property="og:description"]').setAttribute('content', `Baca manga ${manga.title} online gratis di MahiruDex. ${manga.description.substring(0, 120)}...`);
+                    document.querySelector('meta[property="og:image"]').setAttribute('content', manga.coverUrl);
 
                     loading.classList.add('hidden');
                     detailContainer.classList.remove('hidden');
